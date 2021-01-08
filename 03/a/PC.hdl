@@ -1,0 +1,21 @@
+CHIP PC {
+    IN in[16], load, inc, reset;
+    OUT out[16];
+
+    //  load,   inc, reset  =>       r.in,    r.load
+    //     _,     _,     1  =>          0,         1
+    //     1,     _,     0  =>         in,         1
+    //     0,     1,     0  =>  r.out + 1,         1
+    //     0,     0,     0  =>          _,         0
+
+    PARTS:
+    Add16(a=pout, b[0]=true, b[1..15]=false, out=add);
+    Mux8Way16(
+        a=pout, b=in, c=add, d=in,
+        e[0..15]=false, f[0..15]=false, g[0..15]=false, h[0..15]=false,
+        sel[0]=load, sel[1]=inc, sel[2]=reset, out=pin);
+    Or(a=load, b=inc, out=pl0);
+    Or(a=pl0, b=reset, out=pl);
+    Register(in=pin, load=pl, out=pout);
+    And16(a=pout, b=pout, out=out);
+}
